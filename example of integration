@@ -1,0 +1,95 @@
+How do I call a C function from C++?  
+Just declare the C function extern "C" (in your C++ code) and call it (from your C or C++ code). For example:
+
+    // C++ code
+    extern "C" void f(int); // one way
+    extern "C" {    // another way
+        int g(double);
+        double h();
+    };
+    void code(int i, double d)
+    {
+        f(i);
+        int ii = g(d);
+        double dd = h();
+        // ...
+    }
+The definitions of the functions may look like this:
+
+    /* C code: */
+    void f(int i)
+    {
+        /* ... */
+    }
+    int g(double d)
+    {
+        /* ... */
+    }
+    double h()
+    {
+        /* ... */
+    }
+Note that C++ type rules, not C rules, are used. So you can’t call function declared extern "C" with the wrong number of arguments. For example:
+
+    // C++ code
+    void more_code(int i, double d)
+    {
+        double dd = h(i,d); // error: unexpected arguments
+        // ...
+    }
+How do I call a C++ function from C?  
+Just declare the C++ function extern "C" (in your C++ code) and call it (from your C or C++ code). For example:
+
+    // C++ code:
+    extern "C" void f(int);
+    void f(int i)
+    {
+        // ...
+    }
+Now f() can be used like this:
+
+    /* C code: */
+    void f(int);
+    void cc(int i)
+    {
+        f(i);
+        /* ... */
+    }
+Naturally, this works only for non-member functions. If you want to call member functions (incl. virtual functions) from C, you need to provide a simple wrapper. For example:
+
+    // C++ code:
+    class C {
+        // ...
+        virtual double f(int);
+    };
+    extern "C" double call_C_f(C* p, int i) // wrapper function
+    {
+        return p->f(i);
+    }
+Now C::f() can be used like this:
+
+    /* C code: */
+    double call_C_f(struct C* p, int i);
+    void ccc(struct C* p, int i)
+    {
+        double d = call_C_f(p,i);
+        /* ... */
+    }
+If you want to call overloaded functions from C, you must provide wrappers with distinct names for the C code to use. For example:
+
+    // C++ code:
+    void f(int);
+    void f(double);
+    extern "C" void f_i(int i) { f(i); }
+    extern "C" void f_d(double d) { f(d); }
+Now the f() functions can be used like this:
+
+    /* C code: */
+    void f_i(int);
+    void f_d(double);
+    void cccc(int i,double d)
+    {
+        f_i(i);
+        f_d(d);
+        /* ... */
+    }
